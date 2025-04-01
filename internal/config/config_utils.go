@@ -5,9 +5,14 @@ import (
 	"os"
 )
 
+// Default configuration file name, stored in user's home directory
 const configFileName = "/.gatorconfig.json"
+
+// Default database URL when none is configured
 const db_url = "postgres://example"
 
+// setFilePath determines the full path to the config file
+// by appending the config filename to the user's home directory
 func setFilePath() string {
 	home_path, err := os.UserHomeDir()
 	if err != nil {
@@ -16,6 +21,9 @@ func setFilePath() string {
 	return home_path + configFileName
 }
 
+// writeConfig serializes the provided Config struct to JSON
+// and writes it to the configuration file
+// If the file doesn't exist, it is created with appropriate permissions
 func writeConfig(c *Config) {
 	path := setFilePath()
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -24,7 +32,7 @@ func writeConfig(c *Config) {
 	}
 	defer file.Close()
 	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ")
+	encoder.SetIndent("", "  ") // Pretty-print the JSON with 2-space indentation
 	err = encoder.Encode(c)
 	if err != nil {
 		return
