@@ -6,5 +6,5 @@ import (
 
 type State struct {
 	// The current state of the application
-	config *config.Config
+	Config *config.Config
 }

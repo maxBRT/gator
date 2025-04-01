@@ -1,18 +1,21 @@
 package main
 
 import (
-	"github.com/maxBRT/gator/internal/config"
+	"fmt"
+
+	"github.com/maxBRT/gator/internal/clilogic"
 )
 
 func main() {
-	// Initialize the config
-	cfg := config.Config{}
-	// Set the username in the config
-	err := cfg.SetUser("admin")
-	if err != nil {
-		panic(err)
-	}
+	checkArgs()
+	appState := initState()
+
+	commands := &clilogic.Commands{}
+	commands.Register("login", clilogic.HandlerLogin)
+
+	runCommandEntered(appState, commands)
+
 	// Print the config
-	println("DB URL:", cfg.DBURL)
-	println("Username:", cfg.USERNAME)
+	fmt.Println("DB URL:", appState.Config.DBURL)
+	fmt.Println("Username:", appState.Config.USERNAME)
 }
