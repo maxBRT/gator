@@ -10,14 +10,14 @@ import (
 	"github.com/maxBRT/gator/internal/database"
 )
 
-// main is the entry point for the Gator CLI application
+// main is the entry point for the Gator CLI application.
 // It initializes the application state, registers commands,
-// and processes the command entered by the user
+// and processes the command entered by the user.
 func main() {
 	// Verify sufficient command-line arguments were provided
 	checkArgs()
 
-	// Initialize application state (config, etc.)
+	// Initialize application state from configuration
 	cfg, err := config.ReadConfig()
 	if err != nil {
 		panic(err)
@@ -26,10 +26,10 @@ func main() {
 		Config: &cfg,
 	}
 
+	// Establish database connection
 	db, err := sql.Open("postgres", appState.Config.DBURL)
 	if err != nil {
 		fmt.Println(err)
-
 	}
 	dbQueries := database.New(db)
 	appState.DB = dbQueries
@@ -38,10 +38,13 @@ func main() {
 	commands := &clilogic.Commands{}
 	commands.Register("login", clilogic.HandlerLogin)
 	commands.Register("register", clilogic.HandlerRegister)
+	commands.Register("reset", clilogic.HandlerReset)
+	commands.Register("users", clilogic.HandlerUsers)
 
 	// Process the command entered by the user
 	runCommandEntered(appState, commands)
 
 	// Display current configuration for debugging
+	fmt.Println("Username:", appState.Config.USERNAME)
 	fmt.Println("DB URL:", appState.Config.DBURL)
 }

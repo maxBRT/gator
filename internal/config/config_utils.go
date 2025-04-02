@@ -23,7 +23,6 @@ func setFilePath() string {
 
 // writeConfig serializes the provided Config struct to JSON
 // and writes it to the configuration file
-// If the file doesn't exist, it is created with appropriate permissions
 func writeConfig(c *Config) {
 	path := setFilePath()
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
@@ -32,9 +31,9 @@ func writeConfig(c *Config) {
 	}
 	defer file.Close()
 	encoder := json.NewEncoder(file)
-	encoder.SetIndent("", "  ") // Pretty-print the JSON with 2-space indentation
+	encoder.SetIndent("", "  ") // Pretty-print the JSON because even Gators appreciate aesthetics
 	err = encoder.Encode(c)
 	if err != nil {
-		return
+		return // Our Gator has terrible handwriting, couldn't save the config
 	}
 }
