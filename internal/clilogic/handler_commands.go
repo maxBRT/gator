@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/maxBRT/gator/internal/database"
+	"github.com/maxBRT/gator/internal/rss"
 )
 
 // HandlerRegister - Where new Gators come to get their student ID
@@ -105,5 +106,14 @@ func HandlerUsers(state *State, cmd Command) error {
 			fmt.Printf("* %s\n", user) // Just another Gator in the swamp
 		}
 	}
+	return nil
+}
+
+func HandlerAggregate(state *State, cmd Command) error {
+	feed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+	fmt.Println(feed)
 	return nil
 }

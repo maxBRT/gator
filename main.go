@@ -40,6 +40,7 @@ func main() {
 	commands.Register("register", clilogic.HandlerRegister)
 	commands.Register("reset", clilogic.HandlerReset)
 	commands.Register("users", clilogic.HandlerUsers)
+	commands.Register("agg", clilogic.HandlerAggregate)
 
 	// Process the command entered by the user
 	runCommandEntered(appState, commands)
