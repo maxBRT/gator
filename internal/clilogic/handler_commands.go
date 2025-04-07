@@ -117,3 +117,129 @@ func HandlerAggregate(state *State, cmd Command) error {
 	fmt.Println(feed)
 	return nil
 }
+
+// HandlerAddFeed creates a new feed entry and automatically follows it
+// for the current user. It requires a feed name and URL as arguments.
+func HandlerAddFeed(state *State, cmd Command, user database.User) error {
+	if len(cmd.Args) < 2 {
+		fmt.Println("Missing arguments")
+		os.Exit(1)
+	}
+
+	feed, err := state.DB.CreateFeed(context.Background(), database.CreateFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      cmd.Args[0],
+		Url:       cmd.Args[1],
+		UserID:    user.ID,
+	})
+	if err != nil {
+		return err
+	}
+	_, err = state.DB.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		FeedID:    feed.ID,
+		UserID:    user.ID,
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// HandlerFollowFeed allows a user to follow an existing feed by its URL.
+// It creates a feed follow relationship between the user and the feed.
+func HandlerFollowFeed(state *State, cmd Command, user database.User) error {
+
+	if len(cmd.Args) < 1 {
+		fmt.Println("Missing arguments")
+		os.Exit(1)
+	}
+
+	feed, err := state.DB.GetFeedByUrl(context.Background(), cmd.Args[0])
+	if err != nil {
+		fmt.Println("That feed does not exist.")
+		os.Exit(1)
+	}
+	_, err = state.DB.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		FeedID:    feed.ID,
+		UserID:    user.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("User %v now follows the %v feed", user.Name, feed.Name)
+	return nil
+}
+
+// HandlerFeedFollowsForUser retrieves and displays all feeds that
+// the current user is following.
+func HandlerFeedFollowsForUser(state *State, cmd Command, user database.User) error {
+	feeds, err := state.DB.GetFeedFollowsForUser(context.Background(), user.ID)
+	if err != nil {
+		return err
+	}
+	if len(feeds) < 1 {
+		fmt.Println("User is not following any feeds.")
+		os.Exit(0)
+	}
+
+	fmt.Printf("User %v is following :\n", user.Name)
+	for _, feed := range feeds {
+		currentFeed, err := state.DB.GetFeedById(context.Background(), feed.FeedID)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("* %v \n", currentFeed.Name)
+	}
+	return nil
+}
+
+// HandlerGetFeeds lists all available feeds in the system
+// along with their URLs and creator information.
+func HandlerGetFeeds(state *State, cmd Command) error {
+	feeds, err := state.DB.GetFeed(context.Background())
+	if err != nil {
+		return err
+	}
+	for _, feed := range feeds {
+		usr, err := state.DB.GetUserById(context.Background(), feed.UserID)
+		if err != nil {
+			return err
+		}
+		fmt.Println(feed.Name)
+		fmt.Println(feed.Url)
+		fmt.Println(usr.Name)
+	}
+	return nil
+}
+
+// HandlerDeleteFeedFollow removes a feed follow relationship
+// between the current user and a specified feed URL.
+func HandlerDeleteFeedFollow(state *State, cmd Command, user database.User) error {
+	if len(cmd.Args) < 1 {
+		fmt.Println("Please provide a URL.")
+		os.Exit(1)
+	}
+	feed, err := state.DB.GetFeedByUrl(context.Background(), cmd.Args[0])
+	if err != nil {
+		return err
+	}
+
+	err = state.DB.DeleteFeedFollow(context.Background(), database.DeleteFeedFollowParams{
+		UserID: user.ID,
+		FeedID: feed.ID,
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Feed %v succesfully deleted for user %v", feed.Name, user.Name)
+	return nil
+}

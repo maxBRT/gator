@@ -10,9 +10,32 @@ import (
 	"github.com/google/uuid"
 )
 
+// Feed represents an RSS feed that has been added to the system.
+// It contains the feed's metadata and ownership information.
+type Feed struct {
+	ID        uuid.UUID // Unique identifier for the feed
+	CreatedAt time.Time // Timestamp when the feed was created
+	UpdatedAt time.Time // Timestamp when the feed was last updated
+	Name      string    // Display name of the feed
+	Url       string    // URL where the feed can be accessed
+	UserID    uuid.UUID // ID of the user who created the feed
+}
+
+// FeedFollow represents a subscription relationship between a user and a feed.
+// It tracks which users are following which feeds.
+type FeedFollow struct {
+	ID        uuid.UUID // Unique identifier for the follow relationship
+	CreatedAt time.Time // Timestamp when the follow was created
+	UpdatedAt time.Time // Timestamp when the follow was last updated
+	UserID    uuid.UUID // ID of the user who is following
+	FeedID    uuid.UUID // ID of the feed being followed
+}
+
+// User represents a registered user in the system.
+// It contains basic user identification and metadata.
 type User struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string
+	ID        uuid.UUID // Unique identifier for the user
+	CreatedAt time.Time // Timestamp when the user account was created
+	UpdatedAt time.Time // Timestamp when the user was last updated
+	Name      string    // Username for the account
 }

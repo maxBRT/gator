@@ -1,8 +1,12 @@
 package main
 
+// Package main is the entry point for the Gator RSS feed aggregator CLI application.
+// It provides functionality for user management, feed subscriptions, and content aggregation.
+
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/lib/pq"
 	"github.com/maxBRT/gator/internal/clilogic"
@@ -41,11 +45,14 @@ func main() {
 	commands.Register("reset", clilogic.HandlerReset)
 	commands.Register("users", clilogic.HandlerUsers)
 	commands.Register("agg", clilogic.HandlerAggregate)
+	commands.Register("addfeed", clilogic.MiddlewareLoggedIn(clilogic.HandlerAddFeed))
+	commands.Register("feeds", clilogic.HandlerGetFeeds)
+	commands.Register("follow", clilogic.MiddlewareLoggedIn(clilogic.HandlerFollowFeed))
+	commands.Register("following", clilogic.MiddlewareLoggedIn(clilogic.HandlerFeedFollowsForUser))
+	commands.Register("unfollow", clilogic.MiddlewareLoggedIn(clilogic.HandlerDeleteFeedFollow))
 
 	// Process the command entered by the user
 	runCommandEntered(appState, commands)
 
-	// Display current configuration for debugging
-	fmt.Println("Username:", appState.Config.USERNAME)
-	fmt.Println("DB URL:", appState.Config.DBURL)
+	os.Exit(0)
 }

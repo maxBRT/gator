@@ -2,17 +2,21 @@ package clilogic
 
 import "fmt"
 
-// Commands manages the set of available CLI commands.
-// It provides registration and execution functionality for the application.
+// Commands implements the command registry and execution system.
+// It provides a flexible way to register and execute CLI commands
+// while maintaining clean separation of concerns.
 type Commands struct {
 	// Map of command names to their handler functions
 	// This allows for dynamic dispatch of commands
 	cmdList map[string]func(*State, Command) error
 }
 
-// Register adds a new command to the command list.
-// Takes a command name and its corresponding handler function.
-// This is how the application extends its functionality.
+// Register adds a new command handler to the registry.
+// Parameters:
+//   - name: The command name to register
+//   - f: The handler function for the command
+//
+// The handler function receives the application state and command arguments.
 func (c *Commands) Register(name string, f func(*State, Command) error) {
 	// Initialize the map if this is the first registration
 	// This ensures we don't need a separate initialization step

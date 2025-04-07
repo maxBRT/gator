@@ -1,5 +1,9 @@
 package main
 
+// Package main provides CLI application startup and utility functions.
+// These helper functions support the main application flow by handling
+// argument validation, state initialization, and command execution.
+
 import (
 	"fmt"
 	"os"
