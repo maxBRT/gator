@@ -4,4 +4,4 @@ ALTER TABLE feeds
 
 -- +goose Down
 ALTER TABLE feeds
-     DELETE COLUMN last_fetched_at;
+     DROP COLUMN last_fetched_at;

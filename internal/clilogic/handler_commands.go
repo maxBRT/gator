@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/maxBRT/gator/internal/database"
-	"github.com/maxBRT/gator/internal/rss"
 )
 
 // HandlerRegister - Where new Gators come to get their student ID
@@ -110,12 +110,23 @@ func HandlerUsers(state *State, cmd Command) error {
 }
 
 func HandlerAggregate(state *State, cmd Command) error {
-	feed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if len(cmd.Args) < 1 {
+		fmt.Println("Not enough arguments")
+		os.Exit(1)
+	}
+
+	time_between_reqs := cmd.Args[0]
+	duration, err := time.ParseDuration(time_between_reqs)
 	if err != nil {
+		fmt.Println("Invalid duration")
 		return err
 	}
-	fmt.Println(feed)
-	return nil
+
+	ticker := time.NewTicker(duration)
+	fmt.Println("Fetching every " + duration.String())
+	for ; ; <-ticker.C {
+		scrapeFeeds(state)
+	}
 }
 
 // HandlerAddFeed creates a new feed entry and automatically follows it
@@ -137,6 +148,7 @@ func HandlerAddFeed(state *State, cmd Command, user database.User) error {
 	if err != nil {
 		return err
 	}
+
 	_, err = state.DB.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
@@ -241,5 +253,33 @@ func HandlerDeleteFeedFollow(state *State, cmd Command, user database.User) erro
 		return err
 	}
 	fmt.Printf("Feed %v succesfully deleted for user %v", feed.Name, user.Name)
+	return nil
+}
+
+func HandlerBrowse(state *State, cmd Command, user database.User) error {
+	var limit int = 2 // Default limit
+
+	if len(cmd.Args) < 1 {
+		// Use default limit that's already set
+	} else {
+		parsedLimit, err := strconv.Atoi(cmd.Args[0])
+		if err != nil {
+			fmt.Println("Invalid limit value. Using default of 2.")
+		} else {
+			limit = parsedLimit
+		}
+	}
+
+	posts, err := state.DB.GetPostForUser(context.Background(), database.GetPostForUserParams{
+		UserID: user.ID,
+		Limit:  int32(limit),
+	})
+	if err != nil {
+		return err
+	}
+	for _, post := range posts {
+		fmt.Printf("Title: %s\nDescription: %s\nPublished: %s\nURL: %s\n\n",
+			post.Title, post.Description, post.PublishedAt, post.Url)
+	}
 	return nil
 }

@@ -50,7 +50,7 @@ func main() {
 	commands.Register("follow", clilogic.MiddlewareLoggedIn(clilogic.HandlerFollowFeed))
 	commands.Register("following", clilogic.MiddlewareLoggedIn(clilogic.HandlerFeedFollowsForUser))
 	commands.Register("unfollow", clilogic.MiddlewareLoggedIn(clilogic.HandlerDeleteFeedFollow))
-
+	commands.Register("browse", clilogic.MiddlewareLoggedIn(clilogic.HandlerBrowse))
 	// Process the command entered by the user
 	runCommandEntered(appState, commands)
 

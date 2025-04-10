@@ -12,11 +12,10 @@ import (
 // - Database connection and queries
 // - Configuration settings
 // - Current user session information
-
-// State holds the application's runtime state
-// It maintains references to configuration and other
-// stateful components needed during program execution
+//
+// State is passed to command handlers to provide access to these
+// shared resources in a structured way.
 type State struct {
-	DB     *database.Queries
-	Config *config.Config // Reference to the application configuration
+	DB     *database.Queries // Database query interface
+	Config *config.Config    // Application configuration
 }

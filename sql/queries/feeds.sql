@@ -23,3 +23,7 @@ SELECT * FROM feeds WHERE id = $1;
 UPDATE feeds 
     SET updated_at = $2, last_fetched_at = $2
     WHERE ID = $1;
+
+-- name: GetNextFeedToFetch :one
+SELECT * FROM feeds
+ORDER BY last_fetched_at ASC NULLS FIRST; 
