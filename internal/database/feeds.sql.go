@@ -22,22 +22,18 @@ VALUES (
     $5,
     $6
 )
-RETURNING id, created_at, updated_at, name, url, user_id
+RETURNING id, created_at, updated_at, name, url, user_id, last_fetched_at
 `
 
-// CreateFeedParams represents the parameters needed to create a new feed
-// All fields are required and must be provided when creating a feed
 type CreateFeedParams struct {
-	ID        uuid.UUID  // Unique identifier for the feed
-	CreatedAt time.Time  // Timestamp when the feed was created
-	UpdatedAt time.Time  // Timestamp when the feed was last updated
-	Name      string     // Display name of the feed
-	Url       string     // URL where the feed can be accessed
-	UserID    uuid.UUID  // ID of the user who owns this feed
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	Url       string
+	UserID    uuid.UUID
 }
 
-// CreateFeed inserts a new feed into the database with the provided parameters
-// Returns the created feed and any error that occurred during the operation
 func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, error) {
 	row := q.db.QueryRowContext(ctx, createFeed,
 		arg.ID,
@@ -55,16 +51,15 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 		&i.Name,
 		&i.Url,
 		&i.UserID,
+		&i.LastFetchedAt,
 	)
 	return i, err
 }
 
 const getFeed = `-- name: GetFeed :many
-SELECT id, created_at, updated_at, name, url, user_id FROM feeds
+SELECT id, created_at, updated_at, name, url, user_id, last_fetched_at FROM feeds
 `
 
-// GetFeed retrieves all feeds from the database
-// Returns a slice of Feed objects and any error that occurred
 func (q *Queries) GetFeed(ctx context.Context) ([]Feed, error) {
 	rows, err := q.db.QueryContext(ctx, getFeed)
 	if err != nil {
@@ -81,6 +76,7 @@ func (q *Queries) GetFeed(ctx context.Context) ([]Feed, error) {
 			&i.Name,
 			&i.Url,
 			&i.UserID,
+			&i.LastFetchedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -96,11 +92,9 @@ func (q *Queries) GetFeed(ctx context.Context) ([]Feed, error) {
 }
 
 const getFeedById = `-- name: GetFeedById :one
-SELECT id, created_at, updated_at, name, url, user_id FROM feeds WHERE id = $1
+SELECT id, created_at, updated_at, name, url, user_id, last_fetched_at FROM feeds WHERE id = $1
 `
 
-// GetFeedById retrieves a specific feed by its ID
-// Returns the feed if found, or an error if not found or if query fails
 func (q *Queries) GetFeedById(ctx context.Context, id uuid.UUID) (Feed, error) {
 	row := q.db.QueryRowContext(ctx, getFeedById, id)
 	var i Feed
@@ -111,17 +105,15 @@ func (q *Queries) GetFeedById(ctx context.Context, id uuid.UUID) (Feed, error) {
 		&i.Name,
 		&i.Url,
 		&i.UserID,
+		&i.LastFetchedAt,
 	)
 	return i, err
 }
 
 const getFeedByUrl = `-- name: GetFeedByUrl :one
-SELECT id, created_at, updated_at, name, url, user_id FROM feeds WHERE url = $1
+SELECT id, created_at, updated_at, name, url, user_id, last_fetched_at FROM feeds WHERE url = $1
 `
 
-// GetFeedByUrl retrieves a feed by its URL
-// Useful for checking if a feed with the same URL already exists
-// Returns the feed if found, or an error if not found or if query fails
 func (q *Queries) GetFeedByUrl(ctx context.Context, url string) (Feed, error) {
 	row := q.db.QueryRowContext(ctx, getFeedByUrl, url)
 	var i Feed
@@ -132,6 +124,23 @@ func (q *Queries) GetFeedByUrl(ctx context.Context, url string) (Feed, error) {
 		&i.Name,
 		&i.Url,
 		&i.UserID,
+		&i.LastFetchedAt,
 	)
 	return i, err
+}
+
+const markFeedFetched = `-- name: MarkFeedFetched :exec
+UPDATE feeds 
+    SET updated_at = $2, last_fetched_at = $2
+    WHERE ID = $1
+`
+
+type MarkFeedFetchedParams struct {
+	ID        uuid.UUID
+	UpdatedAt time.Time
+}
+
+func (q *Queries) MarkFeedFetched(ctx context.Context, arg MarkFeedFetchedParams) error {
+	_, err := q.db.ExecContext(ctx, markFeedFetched, arg.ID, arg.UpdatedAt)
+	return err
 }

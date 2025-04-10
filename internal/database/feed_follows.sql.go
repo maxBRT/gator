@@ -33,29 +33,24 @@ INNER JOIN feeds ON inserted_feed.feed_id = feeds.id
 INNER JOIN users ON inserted_feed.user_id = users.id
 `
 
-// CreateFeedFollowParams represents the parameters required to create a new feed follow relationship
 type CreateFeedFollowParams struct {
-	ID        uuid.UUID  // Unique identifier for the feed follow
-	CreatedAt time.Time  // Timestamp when the follow was created
-	UpdatedAt time.Time  // Timestamp when the follow was last updated
-	FeedID    uuid.UUID  // ID of the feed being followed
-	UserID    uuid.UUID  // ID of the user following the feed
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	FeedID    uuid.UUID
+	UserID    uuid.UUID
 }
 
-// CreateFeedFollowRow represents the result of creating a feed follow
-// Including additional information from joined tables
 type CreateFeedFollowRow struct {
-	ID        uuid.UUID  // Unique identifier for the feed follow
-	CreatedAt time.Time  // Timestamp when the follow was created
-	UpdatedAt time.Time  // Timestamp when the follow was last updated
-	UserID    uuid.UUID  // ID of the user following the feed
-	FeedID    uuid.UUID  // ID of the feed being followed
-	FeedName  string     // Name of the feed (from feeds table join)
-	UserName  string     // Name of the user (from users table join)
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    uuid.UUID
+	FeedID    uuid.UUID
+	FeedName  string
+	UserName  string
 }
 
-// CreateFeedFollow creates a new feed follow relationship and returns extended information
-// including the feed name and username through table joins
 func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowParams) (CreateFeedFollowRow, error) {
 	row := q.db.QueryRowContext(ctx, createFeedFollow,
 		arg.ID,
@@ -81,14 +76,11 @@ const deleteFeedFollow = `-- name: DeleteFeedFollow :exec
 DELETE FROM feed_follows WHERE user_id = $1 AND feed_id = $2
 `
 
-// DeleteFeedFollowParams represents the parameters needed to delete a feed follow
 type DeleteFeedFollowParams struct {
-	UserID uuid.UUID  // ID of the user unfollowing the feed
-	FeedID uuid.UUID  // ID of the feed being unfollowed
+	UserID uuid.UUID
+	FeedID uuid.UUID
 }
 
-// DeleteFeedFollow removes a feed follow relationship for a specific user and feed
-// Returns an error if the operation fails
 func (q *Queries) DeleteFeedFollow(ctx context.Context, arg DeleteFeedFollowParams) error {
 	_, err := q.db.ExecContext(ctx, deleteFeedFollow, arg.UserID, arg.FeedID)
 	return err
@@ -98,8 +90,6 @@ const getFeedFollowsForUser = `-- name: GetFeedFollowsForUser :many
 SELECT id, created_at, updated_at, user_id, feed_id FROM feed_follows WHERE user_id = $1
 `
 
-// GetFeedFollowsForUser retrieves all feed follows for a specific user
-// Returns a slice of FeedFollow objects and any error that occurred
 func (q *Queries) GetFeedFollowsForUser(ctx context.Context, userID uuid.UUID) ([]FeedFollow, error) {
 	rows, err := q.db.QueryContext(ctx, getFeedFollowsForUser, userID)
 	if err != nil {

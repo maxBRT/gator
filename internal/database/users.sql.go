@@ -23,17 +23,13 @@ VALUES (
 RETURNING id, created_at, updated_at, name
 `
 
-// CreateUserParams holds all the data needed to create a new user.
-// These parameters map directly to the database columns.
 type CreateUserParams struct {
-	ID        uuid.UUID // Unique identifier for the new user
-	CreatedAt time.Time // Timestamp of user creation
-	UpdatedAt time.Time // Timestamp of last update
-	Name      string    // Username for the account
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
 }
 
-// CreateUser inserts a new user into the database with the provided parameters.
-// Returns the created user record or an error if the insertion fails.
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.ID,
@@ -56,8 +52,6 @@ SELECT id, created_at, updated_at, name FROM users
 WHERE name = $1
 `
 
-// GetUser retrieves a user record by username.
-// Returns the user record or an error if not found.
 func (q *Queries) GetUser(ctx context.Context, name string) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUser, name)
 	var i User
@@ -75,8 +69,6 @@ SELECT id, created_at, updated_at, name FROM users
 WHERE id = $1
 `
 
-// GetUserById retrieves a user record by their UUID.
-// Returns the user record or an error if not found.
 func (q *Queries) GetUserById(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRowContext(ctx, getUserById, id)
 	var i User
@@ -93,8 +85,6 @@ const getUsers = `-- name: GetUsers :many
 SELECT name FROM users
 `
 
-// GetUsers retrieves all usernames from the database.
-// Returns a slice of usernames or an error if the query fails.
 func (q *Queries) GetUsers(ctx context.Context) ([]string, error) {
 	rows, err := q.db.QueryContext(ctx, getUsers)
 	if err != nil {
@@ -122,8 +112,6 @@ const resetUsersTable = `-- name: ResetUsersTable :exec
 TRUNCATE TABLE users CASCADE
 `
 
-// ResetUsersTable truncates the users table, removing all user records.
-// This is a destructive operation that also cascades to related tables.
 func (q *Queries) ResetUsersTable(ctx context.Context) error {
 	_, err := q.db.ExecContext(ctx, resetUsersTable)
 	return err
